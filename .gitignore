@@ -1,0 +1,14 @@
+.env
+web/.env
+web/vendor/
+web/node_modules/
+web/public/build/
+web/public/hot
+web/storage/*.key
+web/bootstrap/cache/*.php
+engine/.venv/
+__pycache__/
+*.pyc
+.DS_Store
+.idea/
+.vscode/
