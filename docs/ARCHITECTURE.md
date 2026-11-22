@@ -3,13 +3,13 @@
 ## Principles
 
 1. **Modules, not one big app.** Each feature (Projects, Crawler, Keywords, Competitors, Plan,
-   AI, Backlinks, Outreach, Reports) lives in `web/app/Modules/<Name>` with its own models,
+   AI, Backlinks, Outreach, Reports) lives in `app/Modules/<Name>` with its own models,
    services, jobs and routes. A new feature is a new module.
-2. **The SEO plan is configuration.** Steps are defined in `web/config/seo_plan.php`. Each
+2. **The SEO plan is configuration.** Steps are defined in `config/seo_plan.php`. Each
    project copies them into `project_steps`, where they can be enabled, disabled, reordered or
    extended per client without code changes.
 3. **Providers behind contracts.** Data (DataForSEO, Moz, Google) and AI (Claude, Gemini) are
-   reached through interfaces in `web/app/Contracts`. Swap or add a provider by writing one class
+   reached through interfaces in `app/Contracts`. Swap or add a provider by writing one class
    and changing config.
 4. **Numbers come from data, words come from AI.** Volumes, rankings and authority come from data
    providers and our crawler. AI explains, groups and writes; it never invents metrics.
@@ -20,12 +20,22 @@
 
 ## Flow of a crawl
 
+The crawl engine is chosen by `CRAWL_ENGINE` (`App\Contracts\CrawlEngine`). Both engines produce
+identical page data and deliver it through `CrawlIngestService`, so nothing else changes.
+
+**php** (Hostinger, any PHP host)
 ```
-User submits URL → Laravel creates Project + Crawl (status=queued)
-  → POST engine /v1/site-audits {url, max_pages, callback_url, crawl_id}
-  → engine-worker crawls, analyses pages
-  → engine POSTs results to /api/internal/crawls/{id}/results (X-Engine-Key)
-  → Laravel stores pages, links, issues; computes keyword usage; marks crawl done
+User submits URL → Project + Crawl (queued) → StartCrawl → PhpCrawlEngine
+  → reads robots.txt / sitemap / llms.txt, seeds crawl_frontier with the start URL
+  → CrawlChunk: fetch next 20 URLs (5 in parallel), analyse, store, add new links → next CrawlChunk
+  → FinishCrawl: check linked URL statuses, site-wide checks → ingest finish → keyword usage
+```
+
+**python** (VPS)
+```
+StartCrawl → PythonCrawlEngine → POST engine /v1/site-audits {callback_base}
+  → engine-worker crawls, POSTs page batches to /api/internal/crawls/{id}/pages
+  → POSTs site summary to /api/internal/crawls/{id}/finish → ingest finish → keyword usage
 ```
 
 ## AI layer

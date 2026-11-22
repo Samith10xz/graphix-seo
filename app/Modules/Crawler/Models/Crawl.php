@@ -10,13 +10,20 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Crawl extends Model
 {
     protected $fillable = [
-        'project_id', 'status', 'engine_job_id', 'max_pages', 'pages_crawled', 'seo_score', 'ai_score',
-        'summary', 'error', 'started_at', 'finished_at',
+        'project_id', 'status', 'engine', 'engine_job_id', 'max_pages', 'pages_crawled', 'seo_score', 'ai_score',
+        'summary', 'state', 'error', 'started_at', 'finished_at',
     ];
+
+    protected $hidden = ['state'];
 
     protected function casts(): array
     {
-        return ['summary' => 'array', 'started_at' => 'datetime', 'finished_at' => 'datetime'];
+        return ['summary' => 'array', 'state' => 'array', 'started_at' => 'datetime', 'finished_at' => 'datetime'];
+    }
+
+    public function frontier(): HasMany
+    {
+        return $this->hasMany(CrawlFrontier::class);
     }
 
     public function project(): BelongsTo

@@ -1,11 +1,9 @@
 .env
-web/.env
-web/vendor/
-web/node_modules/
-web/public/build/
-web/public/hot
-web/storage/*.key
-web/bootstrap/cache/*.php
+/vendor/
+/node_modules/
+/public/build/
+/public/hot
+/storage/*.key
 engine/.venv/
 __pycache__/
 *.pyc

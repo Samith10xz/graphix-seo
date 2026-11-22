@@ -125,6 +125,10 @@ def analyze_page(url: str, status: int, headers: dict, html: str, load_ms: int =
         _issue(issues, "seo", "notice", "og_incomplete", "Open Graph title/image missing (affects social shares).")
     hreflangs = [l.get("hreflang") for l in soup.find_all("link", hreflang=True)]
 
+    # Structured data is read before scripts are stripped from the body.
+    ld, ld_errors = _jsonld(soup)
+    types = _types(ld)
+
     # ---------- Content ----------
     body = soup.body or soup
     for t in body(["script", "style", "noscript", "template", "svg"]):
@@ -175,8 +179,6 @@ def analyze_page(url: str, status: int, headers: dict, html: str, load_ms: int =
         _issue(issues, "seo", "notice", "no_internal_links", "No internal links on this page.")
 
     # ---------- Structured data ----------
-    ld, ld_errors = _jsonld(soup)
-    types = _types(ld)
     if ld_errors:
         _issue(issues, "seo", "warning", "schema_invalid", f"{ld_errors} JSON-LD block(s) contain invalid JSON.")
     if not ld:
