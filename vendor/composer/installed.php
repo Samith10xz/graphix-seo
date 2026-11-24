@@ -3,7 +3,7 @@
         'name' => 'graphix/seo-platform',
         'pretty_version' => 'dev-main',
         'version' => 'dev-main',
-        'reference' => 'b4102488371825cdb6155b2cdae3c9765bf278d2',
+        'reference' => '7b0c68eed064a7c16a0e507f950dc96d73624fa2',
         'type' => 'project',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
@@ -94,7 +94,7 @@
         'graphix/seo-platform' => array(
             'pretty_version' => 'dev-main',
             'version' => 'dev-main',
-            'reference' => 'b4102488371825cdb6155b2cdae3c9765bf278d2',
+            'reference' => '7b0c68eed064a7c16a0e507f950dc96d73624fa2',
             'type' => 'project',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),
