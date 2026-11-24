@@ -1,0 +1,6 @@
+# Graphix Docs: only public/ is served; .env, vendor and source stay private.
+<FilesMatch "^\.">
+    Require all denied
+</FilesMatch>
+RewriteEngine On
+RewriteRule ^(.*)$ public/$1 [L]
