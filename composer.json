@@ -1,13 +1,12 @@
 {
     "name": "graphix/seo-platform",
     "type": "project",
-    "description": "Graphix SEO Platform — web app and API",
+    "description": "Graphix SEO Platform \u2014 web app and API",
     "license": "proprietary",
     "require": {
         "php": "^8.2",
         "laravel/framework": "^11.31",
-        "laravel/tinker": "^2.10",
-        "phpoffice/phpspreadsheet": "^3.5"
+        "laravel/tinker": "^2.10"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",
@@ -37,7 +36,10 @@
     "config": {
         "optimize-autoloader": true,
         "preferred-install": "dist",
-        "sort-packages": true
+        "sort-packages": true,
+        "platform": {
+            "php": "8.2.0"
+        }
     },
     "minimum-stability": "stable",
     "prefer-stable": true
