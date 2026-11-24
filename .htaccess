@@ -1,0 +1,10 @@
+# Hostinger: the repository is deployed into the subdomain folder.
+# Send every request into public/, so nothing outside it (.env, vendor, app) is reachable.
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteRule ^(.*)$ public/$1 [L]
+</IfModule>
+
+<FilesMatch "^\.">
+    Require all denied
+</FilesMatch>
