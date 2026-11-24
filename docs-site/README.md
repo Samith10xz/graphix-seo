@@ -9,4 +9,5 @@ integrations and runbooks. Built on [BookStack](https://www.bookstackapp.com/) (
   Hostinger deploys that branch into `public_html/docs/app`.
 - Secrets live only in `.env` on the server. **Passwords never go in the docs**: record where the
   login lives in the password manager instead.
-- A cron job runs `php artisan migrate --force` every 15 minutes so upgrades apply their database changes.
+- A cron job runs `graphix-maintain.php` every minute: it generates APP_KEY on the server once, and
+  applies database migrations once per deployed release (after DB_PASSWORD is set).

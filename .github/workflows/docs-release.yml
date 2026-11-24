@@ -50,6 +50,7 @@ jobs:
         run: |
           cp docs-site/root.htaccess /tmp/release/.htaccess
           cp docs-site/README.md /tmp/release/GRAPHIX.md
+          cp docs-site/graphix-maintain.php /tmp/release/graphix-maintain.php
           # Hostinger runs Composer when it sees composer.json; vendor/ is already built.
           mv /tmp/release/composer.json /tmp/release/composer.build.json
           mv /tmp/release/composer.lock /tmp/release/composer.build.lock
