@@ -45,6 +45,7 @@ jobs:
             --exclude deploy --exclude tests --exclude docker-compose.yml --exclude phpunit.xml
           # Hostinger runs `composer install` when composer.json exists; vendor/ is already built.
           mv /tmp/release/composer.json /tmp/release/composer.build.json
+          mv /tmp/release/composer.lock /tmp/release/composer.build.lock
           printf '.env\n/storage/*.key\n' > /tmp/release/.gitignore
           echo "${GITHUB_SHA}" > /tmp/release/RELEASE
 
