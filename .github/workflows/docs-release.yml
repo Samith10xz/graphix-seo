@@ -1,0 +1,72 @@
+name: Build docs release
+
+# Builds BookStack (the Graphix Docs wiki) with vendor/ installed and publishes it to the
+# docs-release branch. Hostinger deploys that branch, so the server never runs Composer.
+on:
+  push:
+    branches: [main]
+    paths: ['docs-site/**', '.github/workflows/docs-release.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: docs-release
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.2"
+          extensions: curl, dom, gd, iconv, mbstring, mysqlnd, openssl, pdo_mysql, tokenizer, xml, zip, fileinfo
+          tools: composer:v2
+
+      - name: Fetch BookStack
+        run: |
+          VERSION=$(tr -d '[:space:]' < docs-site/BOOKSTACK_VERSION)
+          git clone -q --depth 1 --branch "$VERSION" https://github.com/BookStackApp/BookStack.git /tmp/release
+          rm -rf /tmp/release/.git /tmp/release/.github /tmp/release/tests /tmp/release/dev
+          echo "$VERSION" > /tmp/release/BOOKSTACK_VERSION
+
+      - name: Install production dependencies
+        working-directory: /tmp/release
+        run: composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader --no-scripts
+
+      - name: Check it boots
+        working-directory: /tmp/release
+        run: |
+          cp .env.example .env
+          php artisan key:generate --force
+          php artisan --version
+          rm .env bootstrap/cache/*.php 2>/dev/null || true
+
+      - name: Graphix additions
+        run: |
+          cp docs-site/root.htaccess /tmp/release/.htaccess
+          cp docs-site/README.md /tmp/release/GRAPHIX.md
+          # Hostinger runs Composer when it sees composer.json; vendor/ is already built.
+          mv /tmp/release/composer.json /tmp/release/composer.build.json
+          mv /tmp/release/composer.lock /tmp/release/composer.build.lock
+          # vendor/ must be committed; keep runtime files (uploads, logs) out of git.
+          printf '.env\n/storage/images\n' > /tmp/release/.gitignore
+          echo "${GITHUB_SHA}" > /tmp/release/RELEASE
+
+      - name: Publish to docs-release branch
+        run: |
+          REPO="https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git"
+          if git clone -q --depth 1 --branch docs-release "$REPO" /tmp/branch; then :; else
+            git init -q -b docs-release /tmp/branch && git -C /tmp/branch remote add origin "$REPO"
+          fi
+          rsync -a --delete --exclude .git /tmp/release/ /tmp/branch/
+          cd /tmp/branch
+          git config user.name "github-actions"
+          git config user.email "github-actions@users.noreply.github.com"
+          git add -A
+          git commit -q -m "Docs release ${GITHUB_SHA::7}" || { echo "No changes"; exit 0; }
+          git push -q origin docs-release

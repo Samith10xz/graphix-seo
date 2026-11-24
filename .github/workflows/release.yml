@@ -42,7 +42,7 @@ jobs:
           mkdir -p /tmp/release
           rsync -a ./ /tmp/release/ \
             --exclude .git --exclude .github --exclude engine --exclude docker \
-            --exclude deploy --exclude tests --exclude docker-compose.yml --exclude phpunit.xml
+            --exclude deploy --exclude docs-site --exclude tests --exclude docker-compose.yml --exclude phpunit.xml
           # Hostinger runs `composer install` when composer.json exists; vendor/ is already built.
           mv /tmp/release/composer.json /tmp/release/composer.build.json
           mv /tmp/release/composer.lock /tmp/release/composer.build.lock
