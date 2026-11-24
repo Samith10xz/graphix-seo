@@ -44,3 +44,16 @@ Within a minute the cron run applies migrations automatically.
 1. Export the MySQL database from hPanel, import it into the VPS MySQL.
 2. Deploy the same repo with `deploy/bootstrap.sh` + `deploy/install.sh`.
 3. In `.env` set `CRAWL_ENGINE=python` (docker-compose already does this) and point DNS to the VPS.
+
+## Outer .htaccess files (not deployed by Git)
+
+Each app is deployed into a subfolder of its subdomain, and a small `.htaccess` in the subdomain
+folder routes requests inward. Copies live in `deploy/hostinger/`:
+
+| Subdomain folder | File | Routes to |
+|---|---|---|
+| `public_html/seo-new/` | `seo-new.outer.htaccess` | `web/public/` |
+| `public_html/docs/` | `docs.outer.htaccess` | `app/` (then BookStack's own `.htaccess` → `public/`) |
+
+They strip a trailing slash *before* routing inward; otherwise `/books/` redirected to
+`/app/public/books`. Upload with File Manager if a folder is ever recreated.
