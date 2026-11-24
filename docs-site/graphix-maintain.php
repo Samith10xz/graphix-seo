@@ -9,6 +9,7 @@
 | Cheap no-op when there is nothing to do.
 */
 chdir(__DIR__);
+ini_set('display_errors', 'stdout');
 $env = @file_get_contents('.env');
 if ($env === false) {
     exit(0);
@@ -45,30 +46,50 @@ if (! preg_match('/^DB_PASSWORD=\S+/m', $env)) {
 
 $release = trim((string) @file_get_contents('RELEASE'));
 $marker = 'storage/app/graphix_deployed_release';
+if ($release !== '' && trim((string) @file_get_contents($marker)) === $release && file_exists('storage/app/graphix_owner_ready')) {
+    exit(0); // nothing to do
+}
+$app = bootApp();
 if ($release === '' || trim((string) @file_get_contents($marker)) !== $release) {
-    exec(escapeshellarg(PHP_BINARY).' artisan migrate --force --no-interaction 2>&1', $out, $code);
-    echo implode("\n", array_slice($out, -15)), "\n";
+    // Hostinger disables exec()/passthru(), so artisan runs in-process.
+    try {
+        $code = Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
+        echo trim(Illuminate\Support\Facades\Artisan::output()), "\n";
+        Illuminate\Support\Facades\Artisan::call('cache:clear');
+    } catch (Throwable $e) {
+        echo 'Migration failed: ', get_class($e), ': ', $e->getMessage(), "\n";
+        exit(1);
+    }
     if ($code !== 0) {
         echo "Migration failed (exit {$code})\n";
         exit(1);
     }
-    passthru(escapeshellarg(PHP_BINARY).' artisan cache:clear --no-interaction');
     file_put_contents($marker, $release);
     echo "Migrated release {$release}\n";
 }
 
-secureDefaultAdmin($env);
+try {
+    secureDefaultAdmin($env, $app);
+} catch (Throwable $e) {
+    echo 'Owner setup failed: ', get_class($e), ': ', $e->getMessage(), "\n";
+    exit(1);
+}
 
-function secureDefaultAdmin(string $env): void
+function bootApp()
+{
+    require_once __DIR__.'/vendor/autoload.php';
+    $app = require __DIR__.'/bootstrap/app.php';
+    $app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
+
+    return $app;
+}
+
+function secureDefaultAdmin(string $env, $app): void
 {
     $marker = 'storage/app/graphix_owner_ready';
     if (file_exists($marker)) {
         return;
     }
-    require __DIR__.'/vendor/autoload.php';
-    $app = require __DIR__.'/bootstrap/app.php';
-    $app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
-
     $user = BookStack\Users\Models\User::query()->where('email', 'admin@admin.com')->first();
     if (! $user) {
         file_put_contents($marker, date('c'));
