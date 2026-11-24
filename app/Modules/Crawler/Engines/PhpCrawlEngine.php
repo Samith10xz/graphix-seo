@@ -27,7 +27,7 @@ class PhpCrawlEngine implements CrawlEngine
 
     public function start(Crawl $crawl): void
     {
-        $startUrl = Url::normalize($crawl->project->url);
+        $startUrl = Url::clean($crawl->project->url);
         $parts = parse_url($startUrl);
         $base = $parts['scheme'].'://'.$parts['host'].(isset($parts['port']) ? ':'.$parts['port'] : '');
 

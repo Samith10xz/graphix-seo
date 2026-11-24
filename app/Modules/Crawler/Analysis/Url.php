@@ -5,7 +5,16 @@ namespace App\Modules\Crawler\Analysis;
 /** URL helpers matching the Python engine (urljoin + fragment strip + trailing slash trim). */
 final class Url
 {
-    /** Strip #fragment and a trailing slash, like engine/app/audit.py _norm(). */
+    /**
+     * Strip the #fragment, keeping the path exactly as linked (like engine/app/audit.py _link()).
+     * Trailing slashes matter: WordPress serves /about-us/ and redirects /about-us.
+     */
+    public static function clean(string $url): string
+    {
+        return explode('#', $url, 2)[0];
+    }
+
+    /** For comparisons only: strip #fragment and a trailing slash, like engine/app/audit.py _norm(). */
     public static function normalize(string $url): string
     {
         $url = explode('#', $url, 2)[0];

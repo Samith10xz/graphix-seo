@@ -20,21 +20,24 @@
 
 ## Setup (done once)
 
-1. **PHP 8.3** for the site (hPanel → Advanced → PHP Configuration).
+1. **PHP 8.2+** for the site (hPanel → Advanced → PHP Configuration).
 2. **Database**: create a MySQL database + user in hPanel. Host is `127.0.0.1`.
 3. **Git**: hPanel → Advanced → Git → generate the account SSH key; add it to GitHub
    (repo → Settings → Deploy keys, read-only). Deploy `git@github.com:Samith10xz/graphix-seo.git`,
-   branch `main`, into the subdomain folder. Hostinger runs `composer install` automatically.
+   branch **`release`**, into the `web` folder of the subdomain. The `release` branch is built by
+   GitHub Actions with `vendor/` included, so Hostinger never runs Composer.
 4. **.env**: copy `.env.example` to `.env` in the deployed folder; fill DB_*, APP_URL and API keys.
    `APP_KEY` is generated automatically on the first cron run.
 5. **Cron** (hPanel → Advanced → Cron Jobs), every minute:
    `/usr/bin/php /home/<user>/domains/graphixdesign.agency/public_html/<folder>/artisan schedule:run`
-   (use the PHP 8.3 binary path hPanel shows if the default CLI PHP is older).
+   (use the PHP 8.2+ binary path hPanel shows if the default CLI PHP is older).
+6. **First account**: open the site. With no users yet it shows a one-time setup page that creates
+   the owner account and workspace.
 
 ## Updating
 
-Push to `main` → redeploy in hPanel (or enable auto-deploy). Within a minute the cron run applies
-migrations automatically.
+Push to `main` → the "Build release" action updates the `release` branch → redeploy in hPanel.
+Within a minute the cron run applies migrations automatically.
 
 ## Moving to a VPS later
 
