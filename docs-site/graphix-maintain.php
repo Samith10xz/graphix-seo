@@ -21,6 +21,23 @@ if (preg_match('/^APP_KEY=\s*$/m', $env)) {
     echo "APP_KEY generated\n";
 }
 
+// Quote secret values that contain characters .env would misread (#, spaces, $, quotes).
+// The value itself is never printed.
+$env = preg_replace_callback('/^((?:DB|MAIL)_PASSWORD)=(.+)$/m', function ($m) {
+    $v = rtrim($m[2]);
+    if ($v === '' || $v[0] === "'" || $v[0] === '"' || ! preg_match('/[#\s"$\\\\`]/', $v)) {
+        return $m[1].'='.$v;
+    }
+    if (strpos($v, "'") === false) {
+        return $m[1]."='".$v."'";
+    }
+    return $m[1].'="'.addcslashes($v, '"\\$').'"';
+}, $env, -1, $changed);
+if ($env !== @file_get_contents('.env')) {
+    file_put_contents('.env', $env);
+    echo "Quoted a password value in .env\n";
+}
+
 if (! preg_match('/^DB_PASSWORD=\S+/m', $env)) {
     echo "Waiting for DB_PASSWORD in .env\n";
     exit(0);
@@ -29,8 +46,10 @@ if (! preg_match('/^DB_PASSWORD=\S+/m', $env)) {
 $release = trim((string) @file_get_contents('RELEASE'));
 $marker = 'storage/app/graphix_deployed_release';
 if ($release === '' || trim((string) @file_get_contents($marker)) !== $release) {
-    passthru(escapeshellarg(PHP_BINARY).' artisan migrate --force --no-interaction', $code);
+    exec(escapeshellarg(PHP_BINARY).' artisan migrate --force --no-interaction 2>&1', $out, $code);
+    echo implode("\n", array_slice($out, -15)), "\n";
     if ($code !== 0) {
+        echo "Migration failed (exit {$code})\n";
         exit(1);
     }
     passthru(escapeshellarg(PHP_BINARY).' artisan cache:clear --no-interaction');
