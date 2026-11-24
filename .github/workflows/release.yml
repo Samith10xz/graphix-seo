@@ -49,12 +49,18 @@ jobs:
           printf '.env\n/storage/*.key\n' > /tmp/release/.gitignore
           echo "${GITHUB_SHA}" > /tmp/release/RELEASE
 
+      # Each release is a new commit on top of the branch (never a force-push),
+      # so the server's `git pull` always fast-forwards.
       - name: Publish to release branch
         run: |
-          cd /tmp/release
-          git init -q -b release
+          REPO="https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git"
+          if git clone -q --depth 1 --branch release "$REPO" /tmp/branch; then :; else
+            git init -q -b release /tmp/branch && git -C /tmp/branch remote add origin "$REPO"
+          fi
+          rsync -a --delete --exclude .git /tmp/release/ /tmp/branch/
+          cd /tmp/branch
           git config user.name "github-actions"
           git config user.email "github-actions@users.noreply.github.com"
           git add -A
-          git commit -q -m "Release ${GITHUB_SHA::7}"
-          git push -q --force "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" release
+          git commit -q -m "Release ${GITHUB_SHA::7}" || { echo "No changes"; exit 0; }
+          git push -q origin release
