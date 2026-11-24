@@ -176,7 +176,7 @@ final class PageAnalyzer
             if ($href === '' || preg_match('/^(mailto:|tel:|javascript:|#)/i', $href)) {
                 continue;
             }
-            $abs = Url::normalize(Url::resolve($url, $href));
+            $abs = Url::clean(Url::resolve($url, $href));
             if (! str_starts_with($abs, 'http')) {
                 continue;
             }
@@ -268,6 +268,11 @@ final class PageAnalyzer
         $externalUrls = array_keys($external);
         sort($internalUrls);
         sort($externalUrls);
+
+        // An error page has no content worth auditing: report the HTTP error only.
+        if ($status >= 400) {
+            $this->issues = array_values(array_filter($this->issues, fn ($i) => $i['code'] === 'http_error'));
+        }
 
         return [
             'url' => $url,

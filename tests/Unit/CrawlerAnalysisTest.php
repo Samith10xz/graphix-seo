@@ -61,6 +61,7 @@ class CrawlerAnalysisTest extends TestCase
         $this->assertSame('https://parcel.lk/rates/?a=1#x', Url::resolve('https://parcel.lk/services/', '../rates/?a=1#x'));
         $this->assertSame('https://cdn.x.com/a', Url::resolve('https://parcel.lk/', '//cdn.x.com/a'));
         $this->assertSame('https://parcel.lk/rates', Url::normalize('https://parcel.lk/rates/#top'));
+        $this->assertSame('https://parcel.lk/rates/', Url::clean('https://parcel.lk/rates/#top'));
     }
 
     public function test_robots_rules(): void

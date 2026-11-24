@@ -17,7 +17,7 @@ graphix-seo/
 
 | | Hostinger (Cloud Startup) | VPS (Docker) |
 |---|---|---|
-| Web app | PHP 8.3 + Apache, deployed from GitHub | nginx + PHP-FPM container |
+| Web app | PHP 8.2+ + Apache, deployed from the `release` branch | nginx + PHP-FPM container |
 | Crawl engine | `CRAWL_ENGINE=php` — crawls in small queued chunks | `CRAWL_ENGINE=python` — separate engine service |
 | Queue | database, run by cron every minute | Redis + always-on worker |
 | Database | MySQL from hPanel | MySQL container |

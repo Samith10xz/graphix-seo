@@ -27,8 +27,14 @@ def _issue(issues, area, severity, code, message):
 
 
 def _norm(url: str) -> str:
+    """For comparisons only: strip #fragment and a trailing slash."""
     url, _ = urldefrag(url)
     return url.rstrip("/") or url
+
+
+def _link(url: str) -> str:
+    """Strip #fragment, keep the path as linked (trailing slashes matter on WordPress)."""
+    return urldefrag(url)[0]
 
 
 def _words(text: str) -> list[str]:
@@ -165,7 +171,7 @@ def analyze_page(url: str, status: int, headers: dict, html: str, load_ms: int =
         href = a["href"].strip()
         if href.startswith(("mailto:", "tel:", "javascript:", "#")):
             continue
-        absu = _norm(urljoin(url, href))
+        absu = _link(urljoin(url, href))
         if not absu.startswith("http"):
             continue
         is_internal = urlparse(absu).netloc == host
@@ -232,6 +238,10 @@ def analyze_page(url: str, status: int, headers: dict, html: str, load_ms: int =
         # AI-readiness has fewer, more decisive checks, so its notices count more
         w = dict(WEIGHTS, notice=6) if area == "ai" else WEIGHTS
         return max(0, 100 - sum(w[i["severity"]] for i in issues if i["area"] == area))
+
+    # An error page has no content worth auditing: report the HTTP error only.
+    if status >= 400:
+        issues[:] = [i for i in issues if i["code"] == "http_error"]
 
     return {
         "url": url,

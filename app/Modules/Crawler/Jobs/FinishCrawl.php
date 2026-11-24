@@ -47,7 +47,7 @@ class FinishCrawl implements ShouldBeUnique, ShouldQueue
         $statuses = array_merge($known, $fetcher->statuses($unchecked));
 
         $broken = [];
-        Link::where('crawl_id', $crawl->id)
+        Link::where('links.crawl_id', $crawl->id)
             ->join('pages', fn ($j) => $j->on('pages.url_hash', '=', 'links.from_hash')->on('pages.crawl_id', '=', 'links.crawl_id'))
             ->select('pages.url as from_url', 'links.to_url')
             ->orderBy('links.id')

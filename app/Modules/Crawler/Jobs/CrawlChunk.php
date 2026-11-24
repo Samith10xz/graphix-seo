@@ -69,7 +69,7 @@ class CrawlChunk implements ShouldQueue
                 continue; // unreachable: reported later through link checks
             }
 
-            $final = Url::normalize($r['final_url'] ?: $row->url);
+            $final = Url::clean($r['final_url'] ?: $row->url);
             if ($r['redirect_status'] !== null && $final !== $row->url) {
                 $pages[] = $this->redirectPage($row->url, $r['redirect_status'], $final, $row->depth, $r['ms']);
                 if ($this->crawlable($final, $state['host'])) {
