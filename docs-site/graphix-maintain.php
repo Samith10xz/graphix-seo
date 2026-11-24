@@ -49,6 +49,18 @@ $marker = 'storage/app/graphix_deployed_release';
 if ($release !== '' && trim((string) @file_get_contents($marker)) === $release && file_exists('storage/app/graphix_owner_ready')) {
     exit(0); // nothing to do
 }
+// The release ships composer.json renamed (so Hostinger never runs Composer), but some
+// artisan commands read it. Put it back only while this script runs.
+$tempComposer = false;
+if (! file_exists('composer.json') && file_exists('composer.build.json')) {
+    copy('composer.build.json', 'composer.json');
+    $tempComposer = true;
+}
+register_shutdown_function(function () use ($tempComposer) {
+    if ($tempComposer) {
+        @unlink(__DIR__.'/composer.json');
+    }
+});
 $app = bootApp();
 if ($release === '' || trim((string) @file_get_contents($marker)) !== $release) {
     // Hostinger disables exec()/passthru(), so artisan runs in-process.
