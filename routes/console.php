@@ -40,7 +40,8 @@ Artisan::command('app:post-deploy {--force}', function () {
     $this->info("Deployed {$commit}");
 })->purpose('Run migrations and housekeeping once per deployed commit');
 
-Schedule::command('app:post-deploy')->everyMinute()->withoutOverlapping();
+// No overlap lock here: the lock needs the cache table, which this command's migrations create.
+Schedule::command('app:post-deploy')->everyMinute();
 
 // Hostinger has no long-running workers: process the database queue from cron each minute.
 // (On the VPS a dedicated queue worker runs instead, so this is skipped.)

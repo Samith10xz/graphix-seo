@@ -1,0 +1,59 @@
+name: Build release
+
+# Builds a ready-to-run copy of the app (with vendor/ installed) and publishes it to the
+# `release` branch. Hostinger deploys that branch, so the server never needs Composer.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.2"
+          extensions: mbstring, pdo_mysql, intl, bcmath, zip, curl, dom
+          tools: composer:v2
+
+      - name: Install production dependencies
+        run: composer update --no-dev --no-interaction --prefer-dist --optimize-autoloader --no-scripts
+
+      - name: Check the app boots
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+          php artisan package:discover
+          php artisan route:list --except-vendor
+          rm .env bootstrap/cache/*.php
+
+      - name: Assemble release tree
+        run: |
+          mkdir -p /tmp/release
+          rsync -a ./ /tmp/release/ \
+            --exclude .git --exclude .github --exclude engine --exclude docker \
+            --exclude deploy --exclude tests --exclude docker-compose.yml --exclude phpunit.xml
+          # Hostinger runs `composer install` when composer.json exists; vendor/ is already built.
+          mv /tmp/release/composer.json /tmp/release/composer.build.json
+          printf '.env\n/storage/*.key\n' > /tmp/release/.gitignore
+          echo "${GITHUB_SHA}" > /tmp/release/RELEASE
+
+      - name: Publish to release branch
+        run: |
+          cd /tmp/release
+          git init -q -b release
+          git config user.name "github-actions"
+          git config user.email "github-actions@users.noreply.github.com"
+          git add -A
+          git commit -q -m "Release ${GITHUB_SHA::7}"
+          git push -q --force "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" release
