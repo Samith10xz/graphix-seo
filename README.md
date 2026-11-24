@@ -6,7 +6,7 @@ keyword research → … → 90-day roadmap) under one project. Built to be exte
 
 ```
 graphix-seo/
-├── app/ config/ database/ routes/ …   Laravel 11 app (UI, API, plan steps, AI layer, PHP crawler)
+├── app/ config/ database/ routes/ …   Laravel 12 app (UI, API, plan steps, AI layer, PHP crawler)
 ├── engine/                             Python crawl engine (optional, VPS only)
 ├── docker/ docker-compose.yml          VPS deployment
 ├── deploy/                             VPS setup scripts
